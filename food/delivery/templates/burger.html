@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+<!-- {% load static %} -->
+{% block title %} Burger {% endblock %}
+
+{% block content %}
+<style>
+    .title {
+        margin: 50px;
+        text-align: center;
+    }
+    .picture {
+        width: 200px;
+        border-radius: 50%;
+        height: 150px;
+    }
+    .orders {
+        position: relative;
+        top: 100px;
+        line-height: 200%;
+    }
+    .burger-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+    }
+    .burger-item {
+        width: 45%; /* Adjust width to leave space for margins/padding */
+        margin: 10px;
+    }
+
+    .del {
+        position: absolute;
+        right: 30px;
+        background-color: red;
+        color: white;
+        height: 25px;
+        width: 22px;
+        padding-bottom: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .del:hover {
+        background-color: rgb(255, 124, 124);
+    }
+
+    li {
+        display: flex;
+    }
+
+</style>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8">
+            <h2 class="title">Our Burgers,</h2>
+            <div class="burger-container">
+                {% for burger in menu %}
+                    <div class="burger-item">
+                        <img class="picture" src="{{ burger.Image }}">
+                        <h4 class="pt-3" id="bur{{ burger.BurgerID }}">{{ burger.BurgerName }}</h4>
+                        <div class="form-check-inline">
+                            <label class="form-check-label">
+                                <input class="form-check-input" name="burger{{ burger.BurgerID }}" value="{{ burger.Price }}" type="radio" checked>
+                                S: {{ burger.Price }} $
+                            </label>
+                        </div>
+                        <div class="form-check-inline">
+                            <label class="form-check-label">
+                                <input class="form-check-input" name="burger{{ burger.BurgerID }}" value="{{ burger.PriceM }}" type="radio">
+                                M: {{ burger.PriceM }} $
+                            </label>
+                        </div>
+                        <div>
+                            <button class="btn-info mt-3" onclick="addBurger('{{ burger.BurgerID }}')">Add to Cart</button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-md-4 orders">
+            <div class="bg-dark p-4 rounded text-light">
+                <h2 class="text-center">Order list</h2>
+                <ul id="pcart"></ul>
+                <h4 class="text-right" id="ptotal">Total: 0 $</h4>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var pcart = document.querySelector('#pcart');
+    var ptotal = document.querySelector('#ptotal');
+    
+    // Add burger
+    function addBurger(pid) {
+        var burgerID = '#bur' + pid;
+        var name = document.querySelector(burgerID).innerHTML;
+
+        var radio = 'burger' + pid;
+        var pri = document.getElementsByName(radio);
+        var size, price;
+
+        if (pri[0].checked) {
+            price = pri[0].value;
+            size = 'S';
+        } else {
+            price = pri[1].value;
+            size = 'M';
+        }
+
+        var orders = JSON.parse(localStorage.getItem('orders')) || [];
+        var total = parseFloat(localStorage.getItem('total')) || 0;
+        var cartSize = orders.length;
+
+        // Save item and total in local storage
+        orders[cartSize] = [name, size, price];
+        localStorage.setItem('orders', JSON.stringify(orders));
+
+        total += parseFloat(price);
+        localStorage.setItem('total', total);
+
+        // Updating number of items in the shopping cart
+        var cart = document.querySelector("#cart");
+        cart.innerHTML = orders.length;
+
+        var butto = '<div class="del" onClick="removeItem(' + cartSize + ', \'burger\')">x</div>';
+        ptotal.innerHTML = 'Total: ' + total + ' $';
+        pcart.innerHTML += '<li>' + name + ' ' + size + ': ' + price + ' $' + butto + '</li>';
+    }
+
+    function pShoppingCart() {
+        var orders = JSON.parse(localStorage.getItem('orders')) || [];
+        var total = parseFloat(localStorage.getItem('total')) || 0;
+        var cartSize = orders.length;
+        pcart.innerHTML = '';
+
+        for (let i = 0; i < cartSize; i++) {
+            var butto = '<div class="del" onClick="removeItem(' + i + ', \'burger\')">x</div>';
+            pcart.innerHTML += '<li>' + orders[i][0] + ': ' + orders[i][1] + ' ' + orders[i][2] + ' $' + butto + '</li>';
+        }
+
+        ptotal.innerHTML = 'Total: ' + total + ' $';
+    }
+
+    function removeItem(n) {
+        var orders = JSON.parse(localStorage.getItem('orders')) || [];
+        var total = parseFloat(localStorage.getItem('total')) || 0;
+
+        total -= parseFloat(orders[n][2]);
+
+        orders.splice(n, 1);
+
+        // Updating number of items in the shopping cart
+        var cart = document.querySelector("#cart");
+        cart.innerHTML = orders.length;
+
+        localStorage.setItem('orders', JSON.stringify(orders));
+        localStorage.setItem('total', total);
+
+        pShoppingCart();
+    }
+
+    pShoppingCart();
+</script>    
+{% endblock content %}

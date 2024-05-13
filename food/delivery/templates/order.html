@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+<!-- {% load static %} -->
+
+{% block title %} Order {% endblock %}
+
+{% block content %}
+
+<div class="container-fluid m-4">
+    <div class="row">
+       <div class="col-md-7 text-center">
+        <h2>Order</h2>
+        <div class="row">
+            <div class="col-md-4" id="name">
+                <h3>Name</h3>
+            </div>
+            <div class="col-md-4" id="size">
+                <h3>Size</h3>
+            </div>
+            <div class="col-md-4" id="price">
+                <h3>Price</h3>
+            </div>
+       </div>
+       <h2 id="total">Total: </h2>
+    </div>
+    <div class="col-md-1" id="rm">
+
+    </div>
+    <div class="col-md-5 mt-4">
+        <h2>Message</h2>
+        <textarea name="message" id="message" cols="40" rows="5"></textarea>
+        <div class="ml-auto m-4">
+            <button type="submit" class="btn-succsess" onclick="order()">Submit</button>
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+
+var nam = document.querySelector("#name");
+var size = document.querySelector("#size");
+var price = document.querySelector("#price");
+var bill = document.querySelector("#total");
+var rm = document.querySelector("#rm");
+
+function ShoppingCart() {
+    var orders = JSON.parse(localStorage.getItem('orders')) || [];
+    var total = parseFloat(localStorage.getItem('total')) || 0;
+    var cartSize = orders.length;
+
+    nam.innerHTML = '<h3>Name</h3>';
+    size.innerHTML = '<h3>Size</h3>';
+    price.innerHTML = '<h3>price</h3>';
+    rm.innerHTML = '<h3><br></h3>';
+
+    for (let i = 0; i < cartSize; i++) {
+        rm.innerHTML += '<h4><button class="btn-danger" onClick="removeItem(' + i + ')">x</button></h4>';
+        nam.innerHTML += '<h4>' + orders[i][0] + '</h4>';
+        size.innerHTML += '<h4>' + orders[i][1] + '</h4>';
+        price.innerHTML += '<h4>' + orders[i][2] + '</h4>';
+    }
+
+    bill.innerHTML = 'Total: ' + total + ' $';
+}
+ShoppingCart();
+
+function removeItem(n) {
+    var orders = JSON.parse(localStorage.getItem('orders')) || [];
+    var total = parseFloat(localStorage.getItem('total')) || 0;
+
+    total -= parseFloat(orders[n][2]);
+
+    orders.splice(n, 1);
+
+    // Updating number of items in the shopping cart
+    var cart = document.querySelector("#cart");  // Make sure to define #cart in your HTML
+    cart.innerHTML = orders.length;
+
+    localStorage.setItem('orders', JSON.stringify(orders));
+    localStorage.setItem('total', total);
+
+    ShoppingCart();
+}
+
+// ajax
+var note = document.querySelector('#message');
+
+function order() { 
+    var msg = note.value;
+    var orders  = localStorage.getItem('orders');
+
+    var url = '/order/';  // Update this to match your URL configuration
+    var orderData = {};
+    orderData['orders'] = orders;
+    orderData['note'] = msg;
+
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: orderData,
+        success: function(data) {
+            window.location.replace('/success/')
+            localStorage.setItem('orders', JSON.stringify([]))
+            localStorage.setItem('total', 0)
+        },
+    });
+}
+
+</script>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+{% endblock %}
+ 
